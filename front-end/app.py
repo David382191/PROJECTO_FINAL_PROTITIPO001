@@ -1,8 +1,15 @@
+## Alfonso Espinoza.
+
+##Aquí primero vamos a traer las librerías que usaremos aquí.
 from flask import Flask, render_template, request, redirect, session
 import mysql.connector
 
+
+# CREAR APP DE FLASK
 app = Flask(__name__)
+#Esta es una contraseña que usaremos más tarde. 
 app.secret_key = "clave_super_secreta_123"
+
 
 # Conexión a la BD
 conexion = mysql.connector.connect(
@@ -13,20 +20,30 @@ conexion = mysql.connector.connect(
     database="base_ejemplo_prueba"
 )
 
+
 @app.route("/", methods=["GET", "POST"])
 def login():
     if request.method == "POST":
         usuario = request.form["username"]
         password = request.form["password"]
 
+        #Aquí vamos a necesitar usar consultas SQL, por lo que
+        # necesitamremos abrir un lugar donde ejecutarlas,
+        # eso lo que hace esto de aquí abajo. 
         cursor = conexion.cursor(dictionary=True)
+
+        #de esta forma podemos hacer consultas a la base de datos SQL como esta.
+        #Los %s evitan SQL Injection. Mientras que se leeran los valores que enviamos.
         cursor.execute("SELECT * FROM users a WHERE username=%s AND password=%s",
                        (usuario, password))
+        
         admin = cursor.fetchone()
 
+        ##Aquí es donde funciona el redirecionamiento.
         if admin:
             session["admin_id"] = admin["id"]
-            return redirect("/panel")
+            ##Si todo está bien, nos enviará a este lugar. Aquí es donde podemos cambiarlo.
+            return redirect("/templates/home")
         else:
             return render_template("login.html", error="Usuario o contraseña incorrectos")
 
