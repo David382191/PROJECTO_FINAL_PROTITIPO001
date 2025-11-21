@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <title>Lista de Administradores</title>
+    <style>
+        table {
+            width: 80%;
+            margin: auto;
+            border-collapse: collapse;
+        }
+        th, td {
+            border: 1px solid #555;
+            padding: 8px;
+            text-align: center;
+        }
+        th {
+            background-color: #222;
+            color: white;
+        }
+    </style>
+</head>
+<body>
+
+    <h2 style="text-align:center;">Tabla de Administradores</h2>
+
+    <table>
+        <tr>
+            <th>ID</th>
+            <th>Usuario</th>
+            <th>Contraseña</th>
+            <th>Nombre Completo</th>
+            <th>Correo</th>
+        </tr>
+
+        {% for admin in admins %}
+        <tr>
+            <td>{{ admin.idAdmin }}</td>
+            <td>{{ admin.usuario }}</td>
+            <td>{{ admin.contrasena }}</td>
+            <td>{{ admin.nombreCompleto }}</td>
+            <td>{{ admin.correo }}</td>
+        </tr>
+        {% endfor %}
+    </table>
+
+</body>
+</html>
+<!--  Esta vaina de acá son los estiolos. -->
