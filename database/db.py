@@ -1,7 +1,7 @@
 #### Aquí vamos a poner esta vaina de la base de datos.
 import mysql.connector
 
-def get_connection():
+def get_db():
     return mysql.connector.connect(
         host="localhost",
         port=3307,
