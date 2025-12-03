@@ -7,5 +7,5 @@ def get_connection():
         port=3307,
         user="root",
         password="12345",
-        database="chatbot_turnos"
+        database="chatbot_secretaria"
     )
