@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<title>ChatBot Secretaría</title>
+</head>
+<body>
+
+<h2>Chatbot</h2>
+
+<input id="mensaje" placeholder="Escribe aquí...">
+<button onclick="enviar()">Enviar</button>
+
+<p id="respuesta"></p>
+
+<script>
+function enviar() {
+    const texto = document.getElementById("mensaje").value;
+
+    fetch("http://localhost:5000/chat", {
+        method: "POST",
+        headers: {"Content-Type": "application/json"},
+        body: JSON.stringify({mensaje: texto})
+    })
+    .then(res => res.json())
+    .then(data => {
+        document.getElementById("respuesta").innerText = data.respuesta;
+    });
+}
+</script>
+
+</body>
+</html>

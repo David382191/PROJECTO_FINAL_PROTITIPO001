@@ -1,71 +1,75 @@
-## Alfonso Espinoza.
-###########################################################################################
-##Aquí primero vamos a traer las librerías que usaremos aquí.
-from flask import Flask, render_template, request, redirect, session
-import mysql.connector ##esto de acá esuna libreria...negro
+from flask import Flask, render_template, request
+import mysql.connector
+import ollama
 
-from database.db import get_connection   # <<--- IMPORTAMOS LA BD
-###########################################################################################
-# CREAR APP DE FLASK
 app = Flask(__name__)
-#Esta es una contraseña que usaremos más tarde. 
-app.secret_key = "clave_super_secreta_123"
-###########################################################################################
-###########################################################################################
+
+# -----------------------------
+# CONEXIÓN A LA BD
+# -----------------------------
+def get_db():
+    return mysql.connector.connect(
+        host="localhost",
+        port="3307",
+        user="root",
+        password="12345",
+        database="chatbot_secretaria"
+    )
+
+# -----------------------------
+# PALABRA CLAVE
+# -----------------------------
+def buscar_palabra_clave(texto_usuario):
+    conn = get_db()
+    cursor = conn.cursor(dictionary=True)
+
+    query = """
+        SELECT Respuesta_designada 
+        FROM PALABRA_CLAVE 
+        WHERE %s LIKE CONCAT('%', Palabra, '%');
+    """
+
+    cursor.execute(query, (texto_usuario,))
+    resultado = cursor.fetchone()
+
+    cursor.close()
+    conn.close()
+
+    if resultado:
+        return resultado["Respuesta_designada"]
+    
+    return None
+
+# -----------------------------
+# IA CON LLAMA
+# -----------------------------
+def responder_con_llama(texto):
+    respuesta = ollama.chat(
+        model="llama3.2:1b",
+        messages=[{"role": "user", "content": texto}]
+    )
+    return respuesta["message"]["content"]
+
+# -----------------------------
+# RUTA PRINCIPAL
+# -----------------------------
 @app.route("/", methods=["GET", "POST"])
-def login():
+def chat():
+    respuesta = None
+    texto_usuario = ""
+
     if request.method == "POST":
-        usuario = request.form["username"]
-        password = request.form["password"]
+        texto_usuario = request.form["mensaje"]
 
-        #Aquí vamos a necesitar usar consultas SQL, por lo que
-        # necesitamremos abrir un lugar donde ejecutarlas,
-        # eso lo que hace esto de aquí abajo. 
-        conexion = get_connection()
-        cursor = conexion.cursor(dictionary=True)
+        # Intentar palabra clave
+        respuesta = buscar_palabra_clave(texto_usuario)
 
-        #de esta forma podemos hacer consultas a la base de datos SQL como esta.
-        #Los %s evitan SQL Injection. Mientras que se leeran los valores que enviamos.
-        cursor.execute("SELECT * FROM administrador_secretaria a WHERE usuario=%s AND contrasena=%s",
-                       (usuario, password))
-        
-        admin = cursor.fetchone()
-        cursor.close()
-        conexion.close()
+        # Si no existe, usar IA
+        if not respuesta:
+            respuesta = responder_con_llama(texto_usuario)
 
-        ##Aquí es donde funciona el redirecionamiento.
-        if admin:
-            session["admin_id"] = admin["idAdmin"]
-            ##Si todo está bien, nos enviará a este lugar. Aquí es donde podemos cambiarlo.
-            return redirect("/home")
-        else:
-            return render_template("login.html", error="Usuario o contraseña incorrectos")
+    return render_template("chat.html", respuesta=respuesta, mensaje=texto_usuario)
 
-    return render_template("login.html")
-###########################################################################################
-###########################################################################################
-@app.route("/home")
-def home():
-    if "admin_id" not in session:
-        return redirect("/")
-    return render_template("home.html")
-###########################################################################################
-###########################################################################################
-@app.route("/panel")
-def panel():
-    if "admin_id" not in session:
-        return redirect("/")
-    return render_template("panel.html")
-###########################################################################################
-###########################################################################################
-@app.route("/logout")
-def logout():
-    session.clear()
-    return redirect("/")
-###########################################################################################
-###########################################################################################
+
 if __name__ == "__main__":
     app.run(debug=True)
-###########################################################################################
-###########################################################################################
-##Listo, Roberto, terminamos aquí.
